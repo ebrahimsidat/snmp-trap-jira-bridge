@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trapbridge"
+version = "1.0.0"
+description = "Turn SNMP traps into Jira Service Management requests, with de-duplication, flap dampening and PagerDuty fail-over."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Ebrahim Sidat" }]
+keywords = ["snmp", "traps", "jira", "jira-service-management", "pagerduty", "monitoring", "noc", "aiops"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: No Input/Output (Daemon)",
+  "Intended Audience :: System Administrators",
+  "Intended Audience :: Telecommunications Industry",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: System :: Monitoring",
+  "Topic :: System :: Networking :: Monitoring",
+]
+dependencies = [
+  "pysnmp>=7.1,<8",
+  "httpx>=0.27,<1",
+  "PyYAML>=6.0,<7",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "pytest-asyncio>=0.23",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "types-PyYAML",
+]
+
+[project.scripts]
+trapbridge = "trapbridge.app:main"
+
+[project.urls]
+Homepage = "https://github.com/ebrahimsidat/snmp-trap-jira-bridge"
+Issues = "https://github.com/ebrahimsidat/snmp-trap-jira-bridge/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "BLE", "RUF"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+files = ["src"]
+
+[[tool.mypy.overrides]]
+module = ["pysnmp.*"]
+ignore_errors = true
