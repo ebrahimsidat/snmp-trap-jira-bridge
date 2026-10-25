@@ -1,0 +1,80 @@
+# trapbridge example configuration
+# Secrets are referenced as ${ENV_VAR} and resolved at start-up; never commit real values.
+
+log_level: INFO
+log_json: true
+state_file: /var/lib/trapbridge/state.json
+
+snmp:
+  # One listener per upstream system lets alerts be attributed to their source.
+  listeners:
+    - name: core-network
+      host: 0.0.0.0
+      port: 1162
+    - name: cloud-platform
+      host: 0.0.0.0
+      port: 1163
+  communities:
+    - ${TRAPBRIDGE_COMMUNITY}
+  v3_users:
+    - username: trapbridge
+      auth_protocol: sha256
+      auth_key: ${TRAPBRIDGE_V3_AUTH_KEY}
+      priv_protocol: aes128
+      priv_key: ${TRAPBRIDGE_V3_PRIV_KEY}
+
+# Rules are matched by trap OID, most specific (longest) first.
+# Placeholders: {host} {sender} {listener} {trap_oid} {rule} and any varbind by OID.
+rules:
+  - name: link-down
+    trap_oid: 1.3.6.1.6.3.1.1.5.3          # IF-MIB::linkDown
+    severity: major
+    summary: "Link down on {host} (ifIndex {1.3.6.1.2.1.2.2.1.1})"
+  - name: link-up
+    trap_oid: 1.3.6.1.6.3.1.1.5.4          # IF-MIB::linkUp
+    severity: info
+    summary: "Link restored on {host}"
+    clear: true
+  - name: cold-start
+    trap_oid: 1.3.6.1.6.3.1.1.5.1          # SNMPv2-MIB::coldStart
+    severity: warning
+    summary: "{host} restarted (cold start)"
+  - name: node-unreachable
+    trap_oid: 1.3.6.1.4.1.99999.1.1        # example enterprise OID
+    severity: critical
+    summary: "Node {host} unreachable"
+    host_varbind: 1.3.6.1.4.1.99999.1.2.1  # use the node name carried in the trap
+  - name: node-reachable
+    trap_oid: 1.3.6.1.4.1.99999.1.2
+    severity: info
+    summary: "Node {host} reachable again"
+    clear: true
+    host_varbind: 1.3.6.1.4.1.99999.1.2.1
+
+correlation:
+  clear_hold_down_seconds: 120     # absorbs reboot flapping
+  comment_on_repeat: true
+  min_comment_interval_seconds: 300
+
+jira:
+  base_url: https://your-site.atlassian.net
+  service_desk_id: "1"
+  request_type_id: "10"
+  resolve_transition_id: "761"
+  auth_email: ${JIRA_EMAIL}        # omit for Data Center personal access tokens
+  auth_token: ${JIRA_API_TOKEN}
+  severity_field: customfield_10050
+  severity_values:
+    critical: "Sev 1"
+    major: "Sev 2"
+    minor: "Sev 3"
+    warning: "Sev 4"
+    info: "Sev 4"
+  extra_fields:
+    labels: ["snmp", "auto-created"]
+  timeout_seconds: 15
+  max_retries: 3
+
+# Optional: page on-call through PagerDuty if Jira cannot be reached.
+pagerduty:
+  routing_key: ${PAGERDUTY_ROUTING_KEY}
