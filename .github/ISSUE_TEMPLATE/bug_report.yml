@@ -1,0 +1,30 @@
+name: Bug report
+description: Report a defect or unexpected behaviour
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, versions and any relevant configuration (remove secrets).
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      render: shell
